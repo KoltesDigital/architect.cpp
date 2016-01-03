@@ -56,7 +56,7 @@ Several formats are supported: they are in the corresponding sub-namespaces of `
 * `dot`: displays in [DOT](http://www.graphviz.org/)
 * `json`: parses and displays in [JSON](http://json.org/)
 
-Each of these formats can be opted out by editing `premake5.lua`.
+Each of these formats can be opted out for building the library by editing `premake5.lua`. When using the library, you need to define the corresponding constants to access the namespace definitions.
 
 ## Provided dependencies
 

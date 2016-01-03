@@ -62,6 +62,7 @@ project "library"
 	location "build"
 	kind "StaticLib"
 	rtti "Off"
+	targetname "architect"
 
 project "cli"
 	files {
