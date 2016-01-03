@@ -64,6 +64,13 @@ project "library"
 	rtti "Off"
 	targetname "architect"
 
+	filter { "platforms:x32" }
+		targetdir "lib"
+
+	filter { "platforms:x64" }
+		targetdir "lib64"
+
+
 project "cli"
 	files {
 		"code/cli/**",
