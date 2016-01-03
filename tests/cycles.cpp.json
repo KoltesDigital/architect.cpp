@@ -1,0 +1,97 @@
+[
+  {
+    "identifier": {
+      "name": "A",
+      "type": "A"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./cycles.cpp",
+            "line": 8,
+            "type": "composition"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "references": [
+          {
+            "column": 9,
+            "filename": "./cycles.cpp",
+            "line": 12,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "B",
+      "type": "B"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./cycles.cpp",
+            "line": 18,
+            "type": "composition"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "C",
+      "type": "C"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./cycles.cpp",
+            "line": 23,
+            "type": "composition"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "f",
+      "type": "C *()"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 1,
+            "filename": "./cycles.cpp",
+            "line": 4,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  }
+]

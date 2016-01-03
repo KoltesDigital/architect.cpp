@@ -1,0 +1,84 @@
+[
+  {
+    "identifier": {
+      "name": "map",
+      "type": ""
+    },
+    "namespaces": [],
+    "references": [],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Component",
+      "type": "Component"
+    },
+    "namespaces": [],
+    "references": [],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Element",
+      "type": "Element"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 7,
+            "filename": "./template.cpp",
+            "line": 2,
+            "type": "template"
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 14,
+            "filename": "./template.cpp",
+            "line": 12,
+            "type": "composition"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "main",
+      "type": "void ()"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 7,
+            "filename": "./template.cpp",
+            "line": 2,
+            "type": "template"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 14,
+            "filename": "./template.cpp",
+            "line": 17,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  }
+]

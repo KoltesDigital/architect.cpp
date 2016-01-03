@@ -1,0 +1,134 @@
+[
+  {
+    "identifier": {
+      "name": "Visitor",
+      "type": "Visitor"
+    },
+    "namespaces": [],
+    "references": [],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Node",
+      "type": "Node"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 25,
+            "filename": "./composite-visitor.cpp",
+            "line": 10,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Leaf",
+      "type": "Leaf"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 25,
+            "filename": "./composite-visitor.cpp",
+            "line": 16,
+            "type": "association"
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 21,
+            "filename": "./composite-visitor.cpp",
+            "line": 13,
+            "type": "inheritance"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Composite",
+      "type": "Composite"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 25,
+            "filename": "./composite-visitor.cpp",
+            "line": 25,
+            "type": "association"
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 26,
+            "filename": "./composite-visitor.cpp",
+            "line": 22,
+            "type": "inheritance"
+          },
+          {
+            "column": 5,
+            "filename": "./composite-visitor.cpp",
+            "line": 32,
+            "type": "composition"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "visit",
+      "type": "void (Node *)"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./composite-visitor.cpp",
+            "line": 38,
+            "type": "association"
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 12,
+            "filename": "./composite-visitor.cpp",
+            "line": 36,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  }
+]

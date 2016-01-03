@@ -1,0 +1,112 @@
+[
+  {
+    "identifier": {
+      "name": "Person",
+      "type": "Person"
+    },
+    "namespaces": [],
+    "references": [],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "Team",
+      "type": "Team"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./composition.cpp",
+            "line": 12,
+            "type": "composition"
+          },
+          {
+            "column": 5,
+            "filename": "./composition.cpp",
+            "line": 9,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "team",
+      "type": "Team"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 1,
+            "filename": "./composition.cpp",
+            "line": 15,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  },
+  {
+    "identifier": {
+      "name": "Company",
+      "type": "Company"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./composition.cpp",
+            "line": 20,
+            "type": "association"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 17,
+            "filename": "./composition.cpp",
+            "line": 22,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "identifier": {
+      "name": "main",
+      "type": "int ()"
+    },
+    "namespaces": [],
+    "references": [
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./composition.cpp",
+            "line": 30,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  }
+]

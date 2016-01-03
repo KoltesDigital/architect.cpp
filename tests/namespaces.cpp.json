@@ -1,0 +1,108 @@
+[
+  {
+    "identifier": {
+      "name": "Callback",
+      "type": "Callback"
+    },
+    "namespaces": [
+      "App"
+    ],
+    "references": [],
+    "type": "typedef"
+  },
+  {
+    "identifier": {
+      "name": "render",
+      "type": "void ()"
+    },
+    "namespaces": [
+      "App",
+      "UI"
+    ],
+    "references": [],
+    "type": "global"
+  },
+  {
+    "identifier": {
+      "name": "CoreCallback",
+      "type": "CoreCallback"
+    },
+    "namespaces": [
+      "App",
+      "Core"
+    ],
+    "references": [
+      {
+        "id": 0,
+        "references": [
+          {
+            "column": 17,
+            "filename": "./namespaces.cpp",
+            "line": 12,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "typedef"
+  },
+  {
+    "identifier": {
+      "name": "visit",
+      "type": "void (CoreCallback)"
+    },
+    "namespaces": [
+      "App",
+      "Core"
+    ],
+    "references": [
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 20,
+            "filename": "./namespaces.cpp",
+            "line": 14,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  },
+  {
+    "identifier": {
+      "name": "update",
+      "type": "void (int)"
+    },
+    "namespaces": [
+      "App",
+      "Core"
+    ],
+    "references": [
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 23,
+            "filename": "./namespaces.cpp",
+            "line": 21,
+            "type": "association"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "references": [
+          {
+            "column": 13,
+            "filename": "./namespaces.cpp",
+            "line": 21,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "type": "global"
+  }
+]
