@@ -88,9 +88,9 @@ project "cli"
 	rtti "Off"
 	targetname "architect"
 
-project "tests"
+project "tests-runner"
 	files {
-		"code/tests/**",
+		"code/tests-runner/**",
 	}
 	includedirs {
 		"include",
@@ -103,3 +103,10 @@ project "tests"
 	location "build"
 	kind "ConsoleApp"
 	rtti "Off"
+	targetname "tests"
+
+project "tests"
+	files {
+		"tests/**",
+	}
+	kind "None"
