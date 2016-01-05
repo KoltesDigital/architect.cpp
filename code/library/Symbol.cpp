@@ -23,6 +23,7 @@ namespace architect
 		switch (type)
 		{
 		case SymbolType::GLOBAL:
+		case SymbolType::GLOBAL_TEMPLATE:
 		{
 			name = identifier.type + " " + identifier.name;
 			break;
@@ -38,6 +39,21 @@ namespace architect
 		{
 			name = iterNs->name + doubleColon + name;
 			iterNs = iterNs->parent;
+		}
+
+		if (!templateParameters.empty())
+		{
+			name += "<";
+			bool notFirst = false;
+			for (auto &param : templateParameters)
+			{
+				if (notFirst)
+					name += ", ";
+				else
+					notFirst = true;
+				name += param;
+			}
+			name += ">";
 		}
 
 		return name;

@@ -1,10 +1,10 @@
 [
   {
+    "defined": true,
     "identifier": {
       "name": "A",
       "type": "A"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 1,
@@ -32,11 +32,11 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "B",
       "type": "B"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 2,
@@ -53,11 +53,11 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "C",
       "type": "C"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -74,11 +74,11 @@
     "type": "record"
   },
   {
+    "defined": false,
     "identifier": {
       "name": "f",
       "type": "C *()"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 2,

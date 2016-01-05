@@ -86,22 +86,24 @@ namespace architect
 		public:
 			VisitorContext(Registry *registry, Namespace *nameSpace);
 
-			VisitorContext setReferenceType(ReferenceType referenceType);
+			VisitorContext setReferenceType(ReferenceType referenceType) const;
 
 			VisitorContext declareNameSpace(const CXCursor &cursor);
 
-			VisitorContext declareGlobal(const CXCursor &cursor);
+			VisitorContext declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined);
 
-			VisitorContext declareRecord(const CXCursor &cursor);
+			VisitorContext declareRecord(const CXCursor &cursor, bool isTemplate, bool &wasDefined);
+
+			VisitorContext declareTemplateParameter(const CXCursor &cursor);
 
 			VisitorContext declareTypedef(const CXCursor &cursor);
 
 			void declareReference(const CXCursor &cursor, const CXCursor &referenceCursor);
 
 		private:
-			Symbol *getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier);
+			Symbol *getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const;
 
-			Symbol *declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor);
+			Symbol *declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor, bool &wasDefined);
 
 			static CXChildVisitResult nameSpaceVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
 
@@ -110,6 +112,7 @@ namespace architect
 			Symbol *_currentSymbol;
 			ReferenceType _referenceType;
 			bool _inRecord;
+			bool _inTemplateParameter;
 		};
 
 		VisitorContext::VisitorContext(Registry *registry, Namespace *ns)
@@ -118,9 +121,10 @@ namespace architect
 			, _currentSymbol(nullptr)
 			, _referenceType(ReferenceType::ASSOCIATION)
 			, _inRecord(false)
+			, _inTemplateParameter(false)
 		{}
 
-		VisitorContext VisitorContext::setReferenceType(ReferenceType referenceType)
+		VisitorContext VisitorContext::setReferenceType(ReferenceType referenceType) const
 		{
 			VisitorContext subContext(*this);
 			subContext._referenceType = referenceType;
@@ -140,23 +144,23 @@ namespace architect
 			return subContext;
 		}
 
-		VisitorContext VisitorContext::declareGlobal(const CXCursor &cursor)
+		VisitorContext VisitorContext::declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
 		{
 			VisitorContext subContext(*this);
 			subContext._referenceType = ReferenceType::ASSOCIATION;
 
 			if (!_inRecord)
 			{
-				Symbol *symbol = declareSymbol(SymbolType::GLOBAL, cursor, cursor);
+				Symbol *symbol = declareSymbol(isTemplate ? SymbolType::GLOBAL_TEMPLATE : SymbolType::GLOBAL, cursor, cursor, wasDefined);
 				subContext._currentSymbol = symbol;
 			}
 
 			return subContext;
 		}
 
-		VisitorContext VisitorContext::declareRecord(const CXCursor &cursor)
+		VisitorContext VisitorContext::declareRecord(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
 		{
-			Symbol *symbol = declareSymbol(SymbolType::RECORD, cursor, cursor);
+			Symbol *symbol = declareSymbol(isTemplate ? SymbolType::RECORD_TEMPLATE : SymbolType::RECORD, cursor, cursor, wasDefined);
 
 			VisitorContext subContext(*this);
 			subContext._currentSymbol = symbol;
@@ -164,10 +168,25 @@ namespace architect
 			subContext._inRecord = true;
 			return subContext;
 		}
+		
+		VisitorContext VisitorContext::declareTemplateParameter(const CXCursor &cursor)
+		{
+			if (_inTemplateParameter)
+				return *this;
+
+			auto name = clang_getCString(clang_getCursorSpelling(cursor));
+			_currentSymbol->templateParameters.push_back(name);
+
+			VisitorContext subContext(*this);
+			subContext._referenceType = ReferenceType::ASSOCIATION;
+			subContext._inTemplateParameter = true;
+			return subContext;
+		}
 
 		VisitorContext VisitorContext::declareTypedef(const CXCursor &cursor)
 		{
-			Symbol *symbol = declareSymbol(SymbolType::TYPEDEF, cursor, cursor);
+			bool wasDefined;
+			Symbol *symbol = declareSymbol(SymbolType::TYPEDEF, cursor, cursor, wasDefined);
 
 			VisitorContext subContext(*this);
 			subContext._currentSymbol = symbol;
@@ -190,7 +209,7 @@ namespace architect
 			}
 		}
 
-		Symbol *VisitorContext::getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier)
+		Symbol *VisitorContext::getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const
 		{
 			CXType type = clang_getCursorType(cursor);
 
@@ -241,18 +260,22 @@ namespace architect
 			return nullptr;
 		}
 
-		Symbol *VisitorContext::declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor)
+		Symbol *VisitorContext::declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor, bool &wasDefined)
 		{
 			SymbolIdentifier identifier;
 			Symbol *symbol = getSymbol(cursor, identifier);
 			if (!symbol)
 			{
-				symbol = _registry->createSymbol(symbolType);
+				symbol = _registry->createSymbol(symbolType, false);
 				symbol->identifier = identifier;
 				symbol->ns = _currentNameSpace;
 
 				_currentNameSpace->symbols.insert(std::pair<SymbolIdentifier, Symbol *>(identifier, symbol));
 			}
+
+			wasDefined = symbol->defined;
+			if (clang_isCursorDefinition(cursor))
+				symbol->defined = true;
 
 			if (_currentSymbol && symbol != _currentSymbol)
 			{
@@ -279,10 +302,12 @@ namespace architect
 			return CXChildVisit_Continue;
 		}
 
+		CXChildVisitResult functionVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
 		CXChildVisitResult globalVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
 
 		bool handleReference(CXCursor &cursor, VisitorContext &context)
 		{
+			auto name = clang_getCString(clang_getCursorSpelling(cursor));
 			CXCursorKind kind = clang_getCursorKind(cursor);
 			switch (kind)
 			{
@@ -293,9 +318,7 @@ namespace architect
 					CXCursor referencedCursor = clang_getCursorReferenced(cursor);
 					if (!clang_Cursor_isNull(referencedCursor))
 					{
-						VisitorContext subContext = context.setReferenceType(ReferenceType::TEMPLATE);
-						//subContext.declareReference(referencedCursor, cursor);
-						globalVisitor(referencedCursor, cursor, &subContext);
+						globalVisitor(referencedCursor, cursor, &context);
 					}
 				}
 				break;
@@ -314,6 +337,15 @@ namespace architect
 				break;
 			}
 
+			case CXCursor_TemplateTypeParameter:
+			case CXCursor_NonTypeTemplateParameter:
+			case CXCursor_TemplateTemplateParameter:
+			{
+				VisitorContext subContext = context.declareTemplateParameter(cursor);
+				clang_visitChildren(cursor, functionVisitor, &subContext);
+				break;
+			}
+
 			default:
 				return false;
 			}
@@ -327,6 +359,7 @@ namespace architect
 			if (handleReference(cursor, context))
 				return CXChildVisit_Continue;
 
+			auto name = clang_getCString(clang_getCursorSpelling(cursor));
 			CXCursorKind kind = clang_getCursorKind(cursor);
 			switch (kind)
 			{
@@ -347,6 +380,7 @@ namespace architect
 			if (handleReference(cursor, context))
 				return CXChildVisit_Continue;
 
+			auto name = clang_getCString(clang_getCursorSpelling(cursor));
 			CXCursorKind kind = clang_getCursorKind(cursor);
 			switch (kind)
 			{
@@ -363,8 +397,10 @@ namespace architect
 			case CXCursor_StructDecl:
 			case CXCursor_UnionDecl:
 			{
-				VisitorContext subContext = context.declareRecord(cursor);
-				clang_visitChildren(cursor, globalVisitor, &subContext);
+				bool wasDefined;
+				VisitorContext subContext = context.declareRecord(cursor, kind == CXCursor_ClassTemplate, wasDefined);
+				if (!wasDefined)
+					clang_visitChildren(cursor, globalVisitor, &subContext);
 				break;
 			}
 
@@ -376,10 +412,13 @@ namespace architect
 			}
 
 			case CXCursor_FunctionDecl:
+			case CXCursor_FunctionTemplate:
 			case CXCursor_VarDecl:
 			{
-				VisitorContext subContext = context.declareGlobal(cursor);
-				clang_visitChildren(cursor, functionVisitor, &subContext);
+				bool wasDefined;
+				VisitorContext subContext = context.declareGlobal(cursor, kind == CXCursor_FunctionTemplate, wasDefined);
+				if (!wasDefined)
+					clang_visitChildren(cursor, functionVisitor, &subContext);
 				break;
 			}
 

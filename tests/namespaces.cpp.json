@@ -1,5 +1,6 @@
 [
   {
+    "defined": true,
     "identifier": {
       "name": "Callback",
       "type": "Callback"
@@ -11,6 +12,7 @@
     "type": "typedef"
   },
   {
+    "defined": false,
     "identifier": {
       "name": "render",
       "type": "void ()"
@@ -23,6 +25,7 @@
     "type": "global"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "CoreCallback",
       "type": "CoreCallback"
@@ -47,6 +50,7 @@
     "type": "typedef"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "visit",
       "type": "void (CoreCallback)"
@@ -71,6 +75,7 @@
     "type": "global"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "update",
       "type": "void (int)"

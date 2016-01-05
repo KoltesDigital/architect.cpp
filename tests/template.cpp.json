@@ -1,28 +1,22 @@
 [
   {
+    "defined": true,
+    "identifier": {
+      "name": "allocator",
+      "type": ""
+    },
+    "references": [],
+    "templateParameters": [
+      "T"
+    ],
+    "type": "recordTemplate"
+  },
+  {
+    "defined": true,
     "identifier": {
       "name": "map",
       "type": ""
     },
-    "namespaces": [],
-    "references": [],
-    "type": "record"
-  },
-  {
-    "identifier": {
-      "name": "Component",
-      "type": "Component"
-    },
-    "namespaces": [],
-    "references": [],
-    "type": "record"
-  },
-  {
-    "identifier": {
-      "name": "Element",
-      "type": "Element"
-    },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -31,17 +25,76 @@
             "column": 7,
             "filename": "./template.cpp",
             "line": 2,
-            "type": "template"
+            "type": "association"
           }
         ]
-      },
+      }
+    ],
+    "templateParameters": [
+      "Key",
+      "Value",
+      "Alloc"
+    ],
+    "type": "recordTemplate"
+  },
+  {
+    "defined": true,
+    "identifier": {
+      "name": "Component",
+      "type": "Component"
+    },
+    "references": [],
+    "type": "record"
+  },
+  {
+    "defined": true,
+    "identifier": {
+      "name": "ComponentMap",
+      "type": ""
+    },
+    "references": [
       {
         "id": 1,
         "references": [
           {
-            "column": 14,
+            "column": 7,
             "filename": "./template.cpp",
-            "line": 12,
+            "line": 7,
+            "type": "inheritance"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "references": [
+          {
+            "column": 36,
+            "filename": "./template.cpp",
+            "line": 18,
+            "type": "inheritance"
+          }
+        ]
+      }
+    ],
+    "templateParameters": [
+      "T"
+    ],
+    "type": "recordTemplate"
+  },
+  {
+    "defined": true,
+    "identifier": {
+      "name": "Element",
+      "type": "Element"
+    },
+    "references": [
+      {
+        "id": 3,
+        "references": [
+          {
+            "column": 7,
+            "filename": "./template.cpp",
+            "line": 18,
             "type": "composition"
           }
         ]
@@ -50,30 +103,54 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
-      "name": "main",
+      "name": "get",
       "type": "void ()"
     },
-    "namespaces": [],
     "references": [
       {
-        "id": 0,
+        "id": 1,
         "references": [
           {
             "column": 7,
             "filename": "./template.cpp",
-            "line": 2,
-            "type": "template"
+            "line": 7,
+            "type": "association"
           }
         ]
       },
       {
-        "id": 2,
+        "id": 4,
         "references": [
           {
-            "column": 14,
+            "column": 12,
             "filename": "./template.cpp",
-            "line": 17,
+            "line": 30,
+            "type": "association"
+          }
+        ]
+      }
+    ],
+    "templateParameters": [
+      "T"
+    ],
+    "type": "globalTemplate"
+  },
+  {
+    "defined": true,
+    "identifier": {
+      "name": "getSpecialized",
+      "type": "void ()"
+    },
+    "references": [
+      {
+        "id": 5,
+        "references": [
+          {
+            "column": 2,
+            "filename": "./template.cpp",
+            "line": 35,
             "type": "association"
           }
         ]

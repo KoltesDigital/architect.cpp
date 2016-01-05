@@ -1,18 +1,36 @@
-template <typename Key, typename Value>
+template <typename T>
+class allocator
+{
+};
+
+template <typename Key, typename Value, template<typename T> class Alloc = allocator>
 class map
 {
+public:
+	map<Key, Value> &operator=(map<Key, Value> &other);
 };
 
 struct Component
 {
 };
 
-struct Element
+template <typename T>
+class ComponentMap : public map<T, Component>
 {
-    map<int, Component> components;
 };
 
-void main()
+struct Element
 {
-    map<int, Element> elements;
+    ComponentMap<int> components;
+};
+
+template <typename T>
+void get()
+{
+    map<T, Element> elements;
+}
+
+void getSpecialized()
+{
+	get<int>();
 }

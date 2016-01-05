@@ -3,6 +3,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 #include <architect/Reference.hpp>
 
 namespace architect
@@ -34,21 +35,23 @@ namespace architect
 	enum class SymbolType
 	{
 		GLOBAL,
+		GLOBAL_TEMPLATE,
 		RECORD,
+		RECORD_TEMPLATE,
 		TYPEDEF,
 	};
 
 	struct Symbol
 	{
-		bool operator==(const Symbol &other) const;
-
 		Namespace *ns;
 		References references;
 
 		SymbolId id;
 		SymbolType type;
-
+		bool defined;
+		
 		SymbolIdentifier identifier;
+		std::vector<std::string> templateParameters;
 
 		std::string getFullName() const;
 	};

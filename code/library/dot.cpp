@@ -28,7 +28,11 @@ namespace architect
 				template <>
 				void insert(std::string key, std::string value)
 				{
-					_map.insert(std::pair<std::string, std::string>(key, value));
+					auto it = _map.find(key);
+					if (it == _map.end())
+						_map.insert(std::pair<std::string, std::string>(key, value));
+					else
+						it->second += "," + value;
 				}
 
 			private:
@@ -62,14 +66,27 @@ namespace architect
 					attributes.insert("shape", "ellipse");
 					break;
 
+				case SymbolType::GLOBAL_TEMPLATE:
+					attributes.insert("shape", "ellipse");
+					attributes.insert("style", "diagonals");
+					break;
+
 				case SymbolType::RECORD:
 					attributes.insert("shape", "box");
+					break;
+
+				case SymbolType::RECORD_TEMPLATE:
+					attributes.insert("shape", "box");
+					attributes.insert("style", "diagonals");
 					break;
 
 				case SymbolType::TYPEDEF:
 					attributes.insert("shape", "octagon");
 					break;
 				}
+
+				if (!symbol->defined)
+					attributes.insert("style", "dashed");
 
 				if (parameters.pretty)
 					stream << "  ";
@@ -126,6 +143,8 @@ namespace architect
 		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, std::ostream &stream, const FormattingParameters &parameters)
 		{
 			stream << "strict digraph{";
+			if (parameters.pretty)
+				stream << "\n";
 
 			for (auto &pair : symbols)
 			{

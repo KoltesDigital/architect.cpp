@@ -1,19 +1,19 @@
 [
   {
+    "defined": true,
     "identifier": {
       "name": "Visitor",
       "type": "Visitor"
     },
-    "namespaces": [],
     "references": [],
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "Node",
       "type": "Node"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -30,11 +30,11 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "Leaf",
       "type": "Leaf"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -62,11 +62,11 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "Composite",
       "type": "Composite"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -100,11 +100,11 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "visit",
       "type": "void (Node *)"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,

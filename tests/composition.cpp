@@ -1,7 +1,9 @@
+struct Data;
+
 struct Person
 {
-    int age;
-}
+    Data *data;
+};
 
 class Team
 {
@@ -10,7 +12,7 @@ public:
 
 private:
     Person _persons[3];
-}
+};
 
 Team team;
 
@@ -23,7 +25,7 @@ public:
     }
 
     static Company *instance;
-}
+};
 
 int main()
 {

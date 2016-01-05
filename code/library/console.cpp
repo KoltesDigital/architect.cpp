@@ -12,7 +12,7 @@ namespace architect
 			switch (type)
 			{
 			case ReferenceType::TEMPLATE:
-				return "template";
+				return "template specialization";
 			case ReferenceType::INHERITANCE:
 				return "inheritance";
 			case ReferenceType::COMPOSITION:
@@ -30,8 +30,12 @@ namespace architect
 			{
 			case SymbolType::GLOBAL:
 				return "global";
+			case SymbolType::GLOBAL_TEMPLATE:
+				return "global template";
 			case SymbolType::RECORD:
 				return "record";
+			case SymbolType::RECORD_TEMPLATE:
+				return "record template";
 			case SymbolType::TYPEDEF:
 				return "typedef";
 			default:

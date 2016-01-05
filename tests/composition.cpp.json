@@ -1,19 +1,19 @@
 [
   {
+    "defined": false,
     "identifier": {
-      "name": "Person",
-      "type": "Person"
+      "name": "Data",
+      "type": "Data"
     },
-    "namespaces": [],
     "references": [],
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
-      "name": "Team",
-      "type": "Team"
+      "name": "Person",
+      "type": "Person"
     },
-    "namespaces": [],
     "references": [
       {
         "id": 0,
@@ -21,13 +21,34 @@
           {
             "column": 5,
             "filename": "./composition.cpp",
-            "line": 12,
+            "line": 5,
+            "type": "composition"
+          }
+        ]
+      }
+    ],
+    "type": "record"
+  },
+  {
+    "defined": true,
+    "identifier": {
+      "name": "Team",
+      "type": "Team"
+    },
+    "references": [
+      {
+        "id": 1,
+        "references": [
+          {
+            "column": 5,
+            "filename": "./composition.cpp",
+            "line": 14,
             "type": "composition"
           },
           {
             "column": 5,
             "filename": "./composition.cpp",
-            "line": 9,
+            "line": 11,
             "type": "association"
           }
         ]
@@ -36,19 +57,19 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "team",
       "type": "Team"
     },
-    "namespaces": [],
     "references": [
       {
-        "id": 1,
+        "id": 2,
         "references": [
           {
             "column": 1,
             "filename": "./composition.cpp",
-            "line": 15,
+            "line": 17,
             "type": "association"
           }
         ]
@@ -57,30 +78,30 @@
     "type": "global"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "Company",
       "type": "Company"
     },
-    "namespaces": [],
     "references": [
       {
-        "id": 1,
+        "id": 2,
         "references": [
           {
             "column": 5,
             "filename": "./composition.cpp",
-            "line": 20,
+            "line": 22,
             "type": "association"
           }
         ]
       },
       {
-        "id": 2,
+        "id": 3,
         "references": [
           {
             "column": 17,
             "filename": "./composition.cpp",
-            "line": 22,
+            "line": 24,
             "type": "association"
           }
         ]
@@ -89,19 +110,19 @@
     "type": "record"
   },
   {
+    "defined": true,
     "identifier": {
       "name": "main",
       "type": "int ()"
     },
-    "namespaces": [],
     "references": [
       {
-        "id": 2,
+        "id": 3,
         "references": [
           {
             "column": 5,
             "filename": "./composition.cpp",
-            "line": 30,
+            "line": 32,
             "type": "association"
           }
         ]

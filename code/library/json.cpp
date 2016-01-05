@@ -22,6 +22,15 @@ namespace architect
 			return true;
 		}
 
+		bool getProperty(const _json &j, const std::string &name, _json::boolean_t &value)
+		{
+			_json jField;
+			if (!getProperty(j, name, jField) || !jField.is_boolean())
+				return false;
+			value = jField.get<_json::boolean_t>();
+			return true;
+		}
+
 		bool getProperty(const _json &j, const std::string &name, _json::number_integer_t &value)
 		{
 			_json jField;
@@ -89,8 +98,12 @@ namespace architect
 			{
 			case SymbolType::GLOBAL:
 				return "global";
+			case SymbolType::GLOBAL_TEMPLATE:
+				return "globalTemplate";
 			case SymbolType::RECORD:
 				return "record";
+			case SymbolType::RECORD_TEMPLATE:
+				return "recordTemplate";
 			case SymbolType::TYPEDEF:
 				return "typedef";
 			default:
@@ -106,9 +119,19 @@ namespace architect
 				type = SymbolType::GLOBAL;
 				return true;
 			}
+			if (str == "globalTemplate")
+			{
+				type = SymbolType::GLOBAL_TEMPLATE;
+				return true;
+			}
 			if (str == "record")
 			{
 				type = SymbolType::RECORD;
+				return true;
+			}
+			if (str == "recordTemplate")
+			{
+				type = SymbolType::RECORD_TEMPLATE;
 				return true;
 			}
 			if (str == "typedef")
@@ -135,8 +158,15 @@ namespace architect
 
 			_json jSymbol = _json::object();
 			jSymbol["type"] = dumpSymbolType(symbol->type);
+			jSymbol["defined"] = symbol->defined;
 			jSymbol["identifier"] = jIdentifier;
-			jSymbol["namespaces"] = namespaces;
+
+			if (!symbol->templateParameters.empty())
+				jSymbol["templateParameters"] = symbol->templateParameters;
+
+			if (!namespaces.empty())
+				jSymbol["namespaces"] = namespaces;
+
 			return jSymbol;
 		}
 	}
@@ -166,7 +196,11 @@ namespace architect
 				if (!parseSymbolType(jType, type))
 					return false;
 
-				Symbol *symbol = registry.createSymbol(type);
+				_json::boolean_t jDefined;
+				if (!getProperty(jSymbol, "defined", jDefined))
+					return false;
+
+				Symbol *symbol = registry.createSymbol(type, jDefined);
 
 				_json jIdentifier;
 				if (!getProperty(jSymbol, "identifier", jIdentifier) || !jIdentifier.is_object())
@@ -176,29 +210,47 @@ namespace architect
 				if (!getProperty(jIdentifier, "type", symbol->identifier.type))
 					return false;
 
-				_json jNamespaces;
-				if (!getProperty(jSymbol, "namespaces", jNamespaces) || !jNamespaces.is_array())
-					return false;
-				Namespace *iterNs = &registry.rootNameSpace;
-				for (auto &jNamespace : jNamespaces)
+				_json jTemplateParameters;
+				if (getProperty(jSymbol, "templateParameters", jTemplateParameters))
 				{
-					if (!jNamespace.is_string())
+					if (!jTemplateParameters.is_array())
 						return false;
-					std::string name = jNamespace.get<_json::string_t>();
 
-					auto it = iterNs->children.find(name);
-					if (it == iterNs->children.end())
+					for (auto &jTemplateParameter : jTemplateParameters)
 					{
-						Namespace *ns = registry.createNamespace();
-						ns->name = name;
-
-						ns->parent = iterNs;
-						it = iterNs->children.insert(std::pair<std::string, Namespace *>(name, ns)).first;
+						if (!jTemplateParameter.is_string())
+							return false;
+						symbol->templateParameters.push_back(jTemplateParameter.get<_json::string_t>());
 					}
-
-					iterNs = it->second;
 				}
-				iterNs->symbols.insert(std::pair<SymbolIdentifier, Symbol *>(symbol->identifier, symbol));
+
+				_json jNamespaces;
+				Namespace *iterNs = &registry.rootNameSpace;
+				if (getProperty(jSymbol, "namespaces", jNamespaces))
+				{
+					if (!jNamespaces.is_array())
+						return false;
+
+					for (auto &jNamespace : jNamespaces)
+					{
+						if (!jNamespace.is_string())
+							return false;
+						std::string name = jNamespace.get<_json::string_t>();
+
+						auto it = iterNs->children.find(name);
+						if (it == iterNs->children.end())
+						{
+							Namespace *ns = registry.createNamespace();
+							ns->name = name;
+
+							ns->parent = iterNs;
+							it = iterNs->children.insert(std::pair<std::string, Namespace *>(name, ns)).first;
+						}
+
+						iterNs = it->second;
+					}
+					iterNs->symbols.insert(std::pair<SymbolIdentifier, Symbol *>(symbol->identifier, symbol));
+				}
 				symbol->ns = iterNs;
 
 				_json jReferences;

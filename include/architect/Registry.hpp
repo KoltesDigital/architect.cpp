@@ -28,7 +28,7 @@ namespace architect
 		void clear();
 
 		Namespace *createNamespace();
-		Symbol *createSymbol(SymbolType type);
+		Symbol *createSymbol(SymbolType type, bool defined);
 
 		const std::map<SymbolId, Symbol *> &getSymbols() const;
 
@@ -37,8 +37,6 @@ namespace architect
 		std::set<std::list<const Symbol *>> computeScc(const ComputeCyclesParameters &parameters = ComputeCyclesParameters()) const;
 
 		bool operator==(const Registry &other) const;
-
-		void dump(std::ostream &stream) const;
 
 	private:
 		std::set<Namespace *> _namespaces;

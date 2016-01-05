@@ -120,11 +120,12 @@ namespace architect
 		return ns;
 	}
 
-	Symbol *Registry::createSymbol(SymbolType type)
+	Symbol *Registry::createSymbol(SymbolType type, bool defined)
 	{
 		auto symbol = new Symbol();
 		symbol->id = _nextSymbolId;
 		symbol->type = type;
+		symbol->defined = defined;
 		_symbols.insert(std::pair<SymbolId, Symbol *>(_nextSymbolId, symbol));
 		++_nextSymbolId;
 		return symbol;
@@ -276,10 +277,24 @@ namespace architect
 
 			if (symbol->type != otherSymbol->type)
 				return false;
+			if (symbol->defined != otherSymbol->defined)
+				return false;
+
 			if (symbol->identifier.name != otherSymbol->identifier.name)
 				return false;
 			if (symbol->identifier.type != otherSymbol->identifier.type)
 				return false;
+			
+			if (symbol->templateParameters.size() != otherSymbol->templateParameters.size())
+				return false;
+
+			for (auto itTemplateParameterItem = symbol->templateParameters.begin(), itOtherTemplateParameterItem = otherSymbol->templateParameters.begin();
+			itTemplateParameterItem != symbol->templateParameters.end();
+				++itTemplateParameterItem, ++itOtherTemplateParameterItem)
+			{
+				if (*itTemplateParameterItem != *itOtherTemplateParameterItem)
+					return false;
+			}
 
 			const Namespace *iterNs = symbol->ns;
 			const Namespace *iterOtherNs = otherSymbol->ns;
@@ -331,26 +346,4 @@ namespace architect
 
 		return true;
 	}
-
-	void Registry::dump(std::ostream &stream) const
-	{
-		for (auto &pair : _symbols)
-		{
-			const Symbol *symbol = pair.second;
-
-			stream << symbol->getFullName() << ":\n";
-
-			for (auto &refPair : symbol->references)
-			{
-				stream << "  " << _symbols.at(refPair.first)->getFullName() << "\n";
-
-				for (auto &reference : refPair.second)
-				{
-					stream << "    " << (int)reference.type << " " << reference.location.line << "\n";
-				}
-			}
-			stream << "\n";
-		}
-	}
-
 }
