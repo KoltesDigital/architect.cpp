@@ -47,7 +47,7 @@ namespace architect
 					stream << "[";
 					for (auto &pair : attributes._map)
 					{
-						stream << pair.first << "=" << pair.second << ";";
+						stream << pair.first << "=\"" << pair.second << "\";";
 					}
 					stream << "]";
 				}
@@ -58,7 +58,7 @@ namespace architect
 			{
 				Attributes attributes;
 
-				attributes.insert("label", "\"" + symbol->getFullName() + "\"");
+				attributes.insert("label", symbol->getFullName());
 
 				switch (symbol->type)
 				{
