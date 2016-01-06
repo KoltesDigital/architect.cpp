@@ -60,7 +60,7 @@ Each of these formats can be opted out for building the library by editing `prem
 
 ## Provided dependencies
 
-* [LLVM](http://llvm.org/) 3.7.0
+* [LLVM+Clang](http://llvm.org/) 3.7.1
 * https://github.com/nlohmann/json c0132232768458b1a4b6eb6fb77345ee00b01797
 * [cli.cpp](https://github.com/Bloutiouf/cli.cpp) 5cc4c10c9a324b73690d44dbcd423342d6b7a898
 
