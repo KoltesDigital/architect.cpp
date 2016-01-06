@@ -1,5 +1,5 @@
 /*
- * architect.cpp v1.0.1
+ * architect.cpp v1.1.0
  * <https://github.com/Bloutiouf/architect.cpp>
  * Copyright (c) 2016 Jonathan Giroux "Bloutiouf"
  * MIT License <https://opensource.org/licenses/MIT>
