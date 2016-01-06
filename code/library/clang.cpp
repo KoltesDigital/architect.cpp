@@ -83,6 +83,8 @@ namespace architect
 
 			VisitorContext setReferenceType(ReferenceType referenceType) const;
 
+			VisitorContext setInMethod(const CXCursor &cursor) const;
+
 			VisitorContext declareNameSpace(const CXCursor &cursor);
 
 			VisitorContext declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined);
@@ -123,6 +125,18 @@ namespace architect
 		{
 			VisitorContext subContext(*this);
 			subContext._referenceType = referenceType;
+			return subContext;
+		}
+
+		VisitorContext VisitorContext::setInMethod(const CXCursor &recordCursor) const
+		{
+			SymbolIdentifier identifier;
+			Symbol *symbol = getSymbol(recordCursor, identifier);
+
+			VisitorContext subContext(*this);
+			subContext._currentSymbol = symbol;
+			subContext._referenceType = ReferenceType::ASSOCIATION;
+			subContext._inRecord = true;
 			return subContext;
 		}
 
@@ -419,7 +433,8 @@ namespace architect
 
 			case CXCursor_CXXMethod:
 			{
-				VisitorContext subContext = context.setReferenceType(ReferenceType::ASSOCIATION);
+				CXCursor recordCursor = clang_getCursorSemanticParent(cursor);
+				VisitorContext subContext = context.setInMethod(recordCursor);
 				clang_visitChildren(cursor, functionVisitor, &subContext);
 				break;
 			}
