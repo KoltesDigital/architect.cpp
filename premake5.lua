@@ -22,6 +22,10 @@ flags {
 	"Unicode",
 }
 
+defines {
+	-- "ARCHITECT_CLANG_PRINT_CURSORS", -- for debugging cursor traversal
+}
+
 if formats.clang then defines { "ARCHITECT_CLANG_SUPPORT" } end
 if formats.console then defines { "ARCHITECT_CONSOLE_SUPPORT" } end
 if formats.dot then defines { "ARCHITECT_DOT_SUPPORT" } end

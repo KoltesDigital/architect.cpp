@@ -9,42 +9,39 @@ namespace architect
 {
 	namespace
 	{
-		CXChildVisitResult debugVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData)
+#ifdef ARCHITECT_CLANG_PRINT_CURSORS
+		CXChildVisitResult printCursorsVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData)
 		{
 			std::string &prefix = *static_cast<std::string *>(clientData);
 			std::string subPrefix = prefix + "    ";
 
-			CXCursorKind kind = clang_getCursorKind(cursor);
-			std::string kindName(clang_getCString(clang_getCursorKindSpelling(kind))); // debug
+			CXCursorKind cursorKind = clang_getCursorKind(cursor);
+			std::string cursorKindName(clang_getCString(clang_getCursorKindSpelling(cursorKind)));
 
 			CXType type = clang_getCursorType(cursor);
 			std::string typeName(clang_getCString(clang_getTypeSpelling(type)));
 			std::string typeKindName(clang_getCString(clang_getTypeKindSpelling(type.kind)));
-
-			std::string name(clang_getCString(clang_getCursorSpelling(cursor)));
-			std::string displayName(clang_getCString(clang_getCursorDisplayName(cursor)));
-
-			std::string usr(clang_getCString(clang_getCursorUSR(cursor)));
-
-			int cursorNumTemplateArguments = clang_Cursor_getNumTemplateArguments(cursor);
 			int typeNumTemplateArguments = clang_Type_getNumTemplateArguments(type);
 
+			std::string cursorName(clang_getCString(clang_getCursorSpelling(cursor)));
+			std::string cursorDisplayName(clang_getCString(clang_getCursorDisplayName(cursor)));
+			std::string cursorUSR(clang_getCString(clang_getCursorUSR(cursor)));
+			int cursorNumTemplateArguments = clang_Cursor_getNumTemplateArguments(cursor);
+
 			std::cout
-				<< prefix << kindName << "\n"
+				<< prefix << cursorKindName << "\n"
 				<< prefix << "    type spelling: " << typeName << "\n"
 				<< prefix << "    type kind spelling: " << typeKindName << "\n"
-				<< prefix << "    cursor spelling: " << name << "\n"
-				<< prefix << "    cursor display name: " << displayName << "\n"
-				<< prefix << "    cursor usr: " << usr << "\n"
-				// << prefix << "  \ cursorNumTemplateArguments << ", " << typeNumTemplateArguments << ">"
+				<< prefix << "    type num template arguments: " << typeNumTemplateArguments << "\n"
+				<< prefix << "    cursor spelling: " << cursorName << "\n"
+				<< prefix << "    cursor display name: " << cursorDisplayName << "\n"
+				<< prefix << "    cursor usr: " << cursorUSR << "\n"
+				<< prefix << "    cursor num template arguments: " << cursorNumTemplateArguments << "\n"
 				<< std::endl;
-
-			//if (kind == CXCursor_TranslationUnit)
-			//		return CXChildVisit_Break;
 
 			if (typeNumTemplateArguments > 0)
 			{
-				std::cout << prefix << "  Template types:" << std::endl;
+				std::cout << prefix << "  Type template types:" << std::endl;
 				for (int i = 0; i < typeNumTemplateArguments; ++i)
 				{
 					CXType argType = clang_Type_getTemplateArgumentAsType(type, i);
@@ -54,7 +51,7 @@ namespace architect
 				}
 			}
 
-			if (clang_isReference(kind))
+			if (clang_isReference(cursorKind))
 			{
 				std::cout << prefix << "  Reference";
 				CXCursor refCursor = clang_getCursorReferenced(cursor);
@@ -62,9 +59,6 @@ namespace architect
 				{
 					std::string refName(clang_getCString(clang_getCursorSpelling(refCursor)));
 					std::cout << ": " << refName << std::endl;
-
-					//clang_visitChildren(refCursor, debugVisitor, clientData);
-					//debugVisitor(refCursor, cursor, &subPrefix);
 				}
 				std::cout << std::endl;
 			}
@@ -76,10 +70,11 @@ namespace architect
 				std::cout << prefix << "  Parent: " << parentName << std::endl;
 			}
 
-			clang_visitChildren(cursor, debugVisitor, &subPrefix);
+			clang_visitChildren(cursor, printCursorsVisitor, &subPrefix);
 
 			return CXChildVisit_Continue;
 		}
+#endif
 
 		class VisitorContext
 		{
@@ -452,8 +447,10 @@ namespace architect
 		{
 			CXCursor rootCursor = clang_getTranslationUnitCursor(translationUnit);
 
-			//std::string prefix;
-			//clang_visitChildren(rootCursor, debugVisitor, &prefix);
+#ifdef ARCHITECT_CLANG_PRINT_CURSORS
+			std::string prefix;
+			clang_visitChildren(rootCursor, printCursorsVisitor, &prefix);
+#endif
 
 			VisitorContext context(&registry, &registry.rootNameSpace);
 			clang_visitChildren(rootCursor, globalVisitor, &context);
