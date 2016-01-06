@@ -148,6 +148,9 @@ namespace architect
 
 			_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNameSpace->name, subNameSpace));
 
+			if (subNameSpace->name.empty())
+				subNameSpace->name = "?";
+
 			VisitorContext subContext(*this);
 			subContext._currentNameSpace = subNameSpace;
 			return subContext;
@@ -218,6 +221,41 @@ namespace architect
 			}
 		}
 
+		Symbol *findSymbol(SymbolIdentifier &identifier, std::list<std::string> &namespaces, const Namespace *ns)
+		{
+			const Namespace *finalNameSpace = ns;
+			auto itName = namespaces.begin();
+			while (itName != namespaces.end())
+			{
+				auto itChild = finalNameSpace->children.find(*itName);
+				if (itChild == finalNameSpace->children.end())
+					break;
+				finalNameSpace = itChild->second;
+				++itName;
+			}
+
+			if (itName == namespaces.end())
+			{
+				auto it = finalNameSpace->symbols.find(identifier);
+				if (it != finalNameSpace->symbols.end())
+				{
+					return it->second;
+				}
+			}
+
+			for (auto &child : ns->children)
+			{
+				if (child.first.empty())
+				{
+					Symbol *symbol = findSymbol(identifier, namespaces, child.second);
+					if (symbol)
+						return symbol;
+				}
+			}
+
+			return nullptr;
+		}
+
 		Symbol *VisitorContext::getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const
 		{
 			CXType type = clang_getCursorType(cursor);
@@ -233,31 +271,15 @@ namespace architect
 			case CXType_Record:
 			case CXType_Typedef:
 			{
-				std::list<std::string> _namespaces;
-				clang_visitChildren(cursor, nameSpaceVisitor, &_namespaces);
+				std::list<std::string> namespaces;
+				clang_visitChildren(cursor, nameSpaceVisitor, &namespaces);
 
 				Namespace *ns = _currentNameSpace;
 				do
 				{
-					Namespace *finalNameSpace = ns;
-					auto itName = _namespaces.begin();
-					while (itName != _namespaces.end())
-					{
-						auto itChild = finalNameSpace->children.find(*itName);
-						if (itChild == finalNameSpace->children.end())
-							break;
-						finalNameSpace = itChild->second;
-						++itName;
-					}
-
-					if (itName == _namespaces.end())
-					{
-						auto it = finalNameSpace->symbols.find(identifier);
-						if (it != finalNameSpace->symbols.end())
-						{
-							return it->second;
-						}
-					}
+					Symbol *symbol = findSymbol(identifier, namespaces, ns);
+					if (symbol)
+						return symbol;
 
 					ns = ns->parent;
 				} while (ns);

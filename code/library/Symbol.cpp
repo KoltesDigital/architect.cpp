@@ -31,6 +31,8 @@ namespace architect
 
 		default:
 			name = identifier.name;
+			if (name.empty())
+				name = "?";
 			break;
 		}
 

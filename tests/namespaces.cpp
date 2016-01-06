@@ -11,10 +11,13 @@ namespace App
     {
         typedef Callback CoreCallback;
 
-        void visit(CoreCallback callback)
-        {
-            callback();
-        }
+		namespace
+		{
+			void visit(CoreCallback callback)
+			{
+				callback();
+			}
+		}
 
         void update(int i)
         {
