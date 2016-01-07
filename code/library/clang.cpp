@@ -58,7 +58,8 @@ namespace architect
 				if (!clang_Cursor_isNull(refCursor))
 				{
 					std::string refName(clang_getCString(clang_getCursorSpelling(refCursor)));
-					std::cout << ": " << refName << std::endl;
+					std::string refUSR(clang_getCString(clang_getCursorUSR(refCursor)));
+					std::cout << ": " << refName << " (" << refUSR << ")" << std::endl;
 				}
 				std::cout << std::endl;
 			}
@@ -67,7 +68,8 @@ namespace architect
 			if (!clang_Cursor_isNull(parentCursor))
 			{
 				std::string parentName(clang_getCString(clang_getCursorSpelling(parentCursor)));
-				std::cout << prefix << "  Parent: " << parentName << std::endl;
+				std::string parentUSR(clang_getCString(clang_getCursorUSR(parentCursor)));
+				std::cout << prefix << "  Parent: " << parentName << " (" << parentUSR << ")" << std::endl;
 			}
 
 			clang_visitChildren(cursor, printCursorsVisitor, &subPrefix);
@@ -79,7 +81,9 @@ namespace architect
 		class VisitorContext
 		{
 		public:
-			VisitorContext(Registry *registry, Namespace *nameSpace);
+			clang::Parameters &parameters;
+
+			VisitorContext(Registry *registry, clang::Parameters &parameters);
 
 			VisitorContext setReferenceType(ReferenceType referenceType) const;
 
@@ -112,9 +116,10 @@ namespace architect
 			bool _inTemplateParameter;
 		};
 
-		VisitorContext::VisitorContext(Registry *registry, Namespace *ns)
+		VisitorContext::VisitorContext(Registry *registry, clang::Parameters &_parameters)
 			: _registry(registry)
-			, _currentNameSpace(ns)
+			, parameters(_parameters)
+			, _currentNameSpace(&registry->rootNameSpace)
 			, _currentSymbol(nullptr)
 			, _referenceType(ReferenceType::ASSOCIATION)
 			, _inRecord(false)
@@ -408,6 +413,20 @@ namespace architect
 		{
 			VisitorContext &context = *static_cast<VisitorContext *>(clientData);
 
+			if (context.parameters.workingDirectory)
+			{
+				CXString cfilename;
+				unsigned int line, column;
+				CXSourceLocation sourceLocation = clang_getCursorLocation(cursor);
+				clang_getPresumedLocation(sourceLocation, &cfilename, &line, &column);
+				const char *filename = clang_getCString(cfilename);
+				if (filename[0] == '.' && filename[1] == '.'
+					|| filename[0] == '/'
+					|| filename[0] == '\\'
+					|| strchr(filename, ':') != nullptr)
+					return CXChildVisit_Continue;
+			}
+
 			if (handleReference(cursor, context))
 				return CXChildVisit_Continue;
 
@@ -480,7 +499,7 @@ namespace architect
 
 	namespace clang
 	{
-		void parse(Registry &registry, const CXTranslationUnit translationUnit)
+		void parse(Registry &registry, const CXTranslationUnit translationUnit, Parameters &parameters)
 		{
 			CXCursor rootCursor = clang_getTranslationUnitCursor(translationUnit);
 
@@ -489,11 +508,11 @@ namespace architect
 			clang_visitChildren(rootCursor, printCursorsVisitor, &prefix);
 #endif
 
-			VisitorContext context(&registry, &registry.rootNameSpace);
+			VisitorContext context(&registry, parameters);
 			clang_visitChildren(rootCursor, globalVisitor, &context);
 		}
 
-		bool parse(Registry &registry, int argc, const char *const *argv)
+		bool parse(Registry &registry, int argc, const char *const *argv, Parameters &parameters)
 		{
 			CXIndex index = clang_createIndex(0, 0);
 			if (!index)
@@ -508,7 +527,7 @@ namespace architect
 				return false;
 			}
 
-			parse(registry, translationUnit);
+			parse(registry, translationUnit, parameters);
 
 			clang_disposeTranslationUnit(translationUnit);
 			clang_disposeIndex(index);

@@ -28,7 +28,10 @@ Format getFormat(const char *option)
 	return Format::UNKNOWN;
 }
 
-bool loadRegistry(architect::Registry &registry, Format inputFormat, int argc, const char **argv)
+Format inputFormat;
+bool workingDirectory;
+
+bool loadRegistry(architect::Registry &registry, int argc, const char **argv)
 {
 	switch (inputFormat)
 	{
@@ -36,12 +39,17 @@ bool loadRegistry(architect::Registry &registry, Format inputFormat, int argc, c
 
 #ifdef ARCHITECT_CLANG_SUPPORT
 	case Format::CLANG:
-		if (!architect::clang::parse(registry, argc, argv))
+	{
+		architect::clang::Parameters parameters;
+		parameters.workingDirectory = workingDirectory;
+
+		if (!architect::clang::parse(registry, argc, argv, parameters))
 		{
 			std::cerr << "Unable to parse" << std::endl;
 			return false;
 		}
 		return true;
+	}
 #endif
 
 #ifdef ARCHITECT_JSON_SUPPORT
@@ -78,11 +86,16 @@ int main(int argc, const char **argv)
 
 	auto help = parser.defaultHelpFlag();
 
+	workingDirectory = parser.flag("working-directory")
+		.alias("wd")
+		.description("Restrict symbol definitions to working directory and subdirectories")
+		.getValue();
+
 	auto input = parser.option("input")
 		.alias("i")
 		.description("Set input format")
 		.getValue();
-	auto inputFormat = getFormat(input);
+	inputFormat = getFormat(input);
 	if (inputFormat == Format::UNKNOWN)
 		parser.reportError("Unknown input format: %s", input);
 
@@ -115,7 +128,7 @@ Usage: cycles [options])";
 			.getValue();
 
 		parser.getRemainingArguments(argc, argv);
-		if (!loadRegistry(registry, inputFormat, argc, argv))
+		if (!loadRegistry(registry, argc, argv))
 			return EXIT_FAILURE;
 
 		architect::ComputeCyclesParameters parameters;
@@ -180,7 +193,7 @@ Usage: dependencies [options])";
 				.getValue();
 
 			parser.getRemainingArguments(argc, argv);
-			if (!loadRegistry(registry, inputFormat, argc, argv))
+			if (!loadRegistry(registry, argc, argv))
 				return EXIT_FAILURE;
 
 			auto &symbols = registry.getSymbols();
@@ -244,7 +257,7 @@ Usage: scc [options])";
 			.getValue();
 
 		parser.getRemainingArguments(argc, argv);
-		if (!loadRegistry(registry, inputFormat, argc, argv))
+		if (!loadRegistry(registry, argc, argv))
 			return EXIT_FAILURE;
 
 		architect::ComputeCyclesParameters parameters;

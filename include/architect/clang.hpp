@@ -9,8 +9,18 @@ namespace architect
 
 	namespace clang
 	{
-		void parse(Registry &registry, const CXTranslationUnit translationUnit);
-		bool parse(Registry &registry, int argc, const char *const *argv);
+		struct Parameters
+		{
+			bool workingDirectory;
+
+			Parameters()
+				: workingDirectory(false)
+			{}
+		};
+
+		void parse(Registry &registry, const CXTranslationUnit translationUnit, Parameters &parameters = Parameters());
+
+		bool parse(Registry &registry, int argc, const char *const *argv, Parameters &parameters = Parameters());
 	}
 }
 
