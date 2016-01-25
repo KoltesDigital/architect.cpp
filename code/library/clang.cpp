@@ -112,19 +112,19 @@ namespace architect
 				return subContext;
 			}
 
-			VisitorContext declareNameSpace(const CXCursor &cursor)
+			VisitorContext declareNamespace(const CXCursor &cursor)
 			{
-				auto subNameSpace = _registry->createNamespace();
-				subNameSpace->parent = _currentNameSpace;
-				subNameSpace->name = clang_getCString(clang_getCursorSpelling(cursor));
+				auto subNamespace = _registry->createNamespace();
+				subNamespace->parent = _currentNameSpace;
+				subNamespace->name = clang_getCString(clang_getCursorSpelling(cursor));
 
-				_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNameSpace->name, subNameSpace));
+				_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNamespace->name, subNamespace));
 
-				if (subNameSpace->name.empty())
-					subNameSpace->name = "?";
+				if (subNamespace->name.empty())
+					subNamespace->name = "?";
 
 				VisitorContext subContext(*this);
-				subContext._currentNameSpace = subNameSpace;
+				subContext._currentNameSpace = subNamespace;
 				return subContext;
 			}
 
@@ -412,7 +412,7 @@ namespace architect
 			{
 			case CXCursor_Namespace:
 			{
-				VisitorContext subContext = context.declareNameSpace(cursor);
+				VisitorContext subContext = context.declareNamespace(cursor);
 				clang_visitChildren(cursor, globalVisitor, &subContext);
 				break;
 			}
