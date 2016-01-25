@@ -81,32 +81,230 @@ namespace architect
 		class VisitorContext
 		{
 		public:
-			clang::Parameters &parameters;
+			const clang::Parameters &parameters;
 
-			VisitorContext(Registry *registry, clang::Parameters &parameters);
+			VisitorContext(Registry *registry, clang::Parameters &_parameters)
+				: _registry(registry)
+				, parameters(_parameters)
+				, _currentNameSpace(&registry->rootNameSpace)
+				, _currentSymbol(nullptr)
+				, _referenceType(ReferenceType::ASSOCIATION)
+				, _inRecord(false)
+				, _inTemplateParameter(false)
+			{}
 
-			VisitorContext setReferenceType(ReferenceType referenceType) const;
+			VisitorContext setReferenceType(ReferenceType referenceType) const
+			{
+				VisitorContext subContext(*this);
+				subContext._referenceType = referenceType;
+				return subContext;
+			}
 
-			VisitorContext setInMethod(const CXCursor &cursor) const;
+			VisitorContext setInMethod(const CXCursor &cursor) const
+			{
+				SymbolIdentifier identifier;
+				Symbol *symbol = getSymbol(cursor, identifier);
 
-			VisitorContext declareNameSpace(const CXCursor &cursor);
+				VisitorContext subContext(*this);
+				subContext._currentSymbol = symbol;
+				subContext._referenceType = ReferenceType::ASSOCIATION;
+				subContext._inRecord = true;
+				return subContext;
+			}
 
-			VisitorContext declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined);
+			VisitorContext declareNameSpace(const CXCursor &cursor)
+			{
+				auto subNameSpace = _registry->createNamespace();
+				subNameSpace->parent = _currentNameSpace;
+				subNameSpace->name = clang_getCString(clang_getCursorSpelling(cursor));
 
-			VisitorContext declareRecord(const CXCursor &cursor, bool isTemplate, bool &wasDefined);
+				_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNameSpace->name, subNameSpace));
 
-			VisitorContext declareTemplateParameter(const CXCursor &cursor);
+				if (subNameSpace->name.empty())
+					subNameSpace->name = "?";
 
-			VisitorContext declareTypedef(const CXCursor &cursor);
+				VisitorContext subContext(*this);
+				subContext._currentNameSpace = subNameSpace;
+				return subContext;
+			}
 
-			void declareReference(const CXCursor &cursor, const CXCursor &referenceCursor);
+			VisitorContext declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
+			{
+				VisitorContext subContext(*this);
+				subContext._referenceType = ReferenceType::ASSOCIATION;
+
+				if (!_inRecord)
+				{
+					Symbol *symbol = declareSymbol(isTemplate ? SymbolType::GLOBAL_TEMPLATE : SymbolType::GLOBAL, cursor, cursor, wasDefined);
+					subContext._currentSymbol = symbol;
+				}
+
+				return subContext;
+			}
+
+			VisitorContext declareRecord(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
+			{
+				Symbol *symbol = declareSymbol(isTemplate ? SymbolType::RECORD_TEMPLATE : SymbolType::RECORD, cursor, cursor, wasDefined);
+
+				VisitorContext subContext(*this);
+				subContext._currentSymbol = symbol;
+				subContext._referenceType = ReferenceType::COMPOSITION;
+				subContext._inRecord = true;
+				return subContext;
+			}
+
+			VisitorContext declareTemplateParameter(const CXCursor &cursor)
+			{
+				if (_inTemplateParameter)
+					return *this;
+
+				auto name = clang_getCString(clang_getCursorSpelling(cursor));
+				_currentSymbol->templateParameters.push_back(name);
+
+				VisitorContext subContext(*this);
+				subContext._referenceType = ReferenceType::ASSOCIATION;
+				subContext._inTemplateParameter = true;
+				return subContext;
+			}
+
+			VisitorContext declareTypedef(const CXCursor &cursor)
+			{
+				bool wasDefined;
+				Symbol *symbol = declareSymbol(SymbolType::TYPEDEF, cursor, cursor, wasDefined);
+
+				VisitorContext subContext(*this);
+				subContext._currentSymbol = symbol;
+				return subContext;
+			}
+
+			void declareReference(const CXCursor &cursor, const CXCursor &referenceCursor)
+			{
+				SymbolIdentifier identifier;
+				Symbol *symbol = getSymbol(cursor, identifier);
+
+				if (symbol && _currentSymbol && symbol != _currentSymbol)
+				{
+					Reference reference;
+					reference.location.getFromCursor(referenceCursor);
+					reference.type = _referenceType;
+
+					auto &referenceSet = _currentSymbol->references[symbol->id];
+					referenceSet.insert(reference);
+				}
+			}
 
 		private:
-			Symbol *getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const;
+			Symbol *getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const
+			{
+				CXType type = clang_getCursorType(cursor);
 
-			Symbol *declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor, bool &wasDefined);
+				identifier.name = clang_getCString(clang_getCursorSpelling(cursor));
+				identifier.type = clang_getCString(clang_getTypeSpelling(type));
 
-			static CXChildVisitResult nameSpaceVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
+				switch (type.kind)
+				{
+				case CXType_Enum:
+				case CXType_FunctionProto:
+				case CXType_Invalid:
+				case CXType_Record:
+				case CXType_Typedef:
+				{
+					std::list<std::string> namespaces;
+					clang_visitChildren(cursor, nameSpaceVisitor, &namespaces);
+
+					Namespace *ns = _currentNameSpace;
+					do
+					{
+						Symbol *symbol = findSymbol(identifier, namespaces, ns);
+						if (symbol)
+							return symbol;
+
+						ns = ns->parent;
+					} while (ns);
+
+					break;
+				}
+				}
+
+				return nullptr;
+			}
+
+			Symbol *declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor, bool &wasDefined)
+			{
+				SymbolIdentifier identifier;
+				Symbol *symbol = getSymbol(cursor, identifier);
+				if (!symbol)
+				{
+					symbol = _registry->createSymbol(symbolType, false);
+					symbol->identifier = identifier;
+					symbol->ns = _currentNameSpace;
+
+					_currentNameSpace->symbols.insert(std::pair<SymbolIdentifier, Symbol *>(identifier, symbol));
+				}
+
+				wasDefined = symbol->defined;
+				if (clang_isCursorDefinition(cursor))
+					symbol->defined = true;
+
+				if (_currentSymbol && symbol != _currentSymbol)
+				{
+					Reference reference;
+					reference.location.getFromCursor(referenceCursor);
+					reference.type = _referenceType;
+
+					auto &referenceSet = _currentSymbol->references[symbol->id];
+					referenceSet.insert(reference);
+				}
+
+				return symbol;
+			}
+
+			static Symbol *findSymbol(SymbolIdentifier &identifier, std::list<std::string> &namespaces, const Namespace *ns)
+			{
+				const Namespace *finalNameSpace = ns;
+				auto itName = namespaces.begin();
+				while (itName != namespaces.end())
+				{
+					auto itChild = finalNameSpace->children.find(*itName);
+					if (itChild == finalNameSpace->children.end())
+						break;
+					finalNameSpace = itChild->second;
+					++itName;
+				}
+
+				if (itName == namespaces.end())
+				{
+					auto it = finalNameSpace->symbols.find(identifier);
+					if (it != finalNameSpace->symbols.end())
+					{
+						return it->second;
+					}
+				}
+
+				for (auto &child : ns->children)
+				{
+					if (child.first.empty())
+					{
+						Symbol *symbol = findSymbol(identifier, namespaces, child.second);
+						if (symbol)
+							return symbol;
+					}
+				}
+
+				return nullptr;
+			}
+
+			static CXChildVisitResult nameSpaceVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData)
+			{
+				CXCursorKind kind = clang_getCursorKind(cursor);
+				if (kind == CXCursor_NamespaceRef)
+				{
+					std::string name = clang_getCString(clang_getCursorSpelling(cursor));
+					std::list<std::string> &_namespaces = *static_cast<std::list<std::string> *>(clientData);
+					_namespaces.push_back(name);
+				}
+				return CXChildVisit_Continue;
+			}
 
 			Registry *_registry;
 			Namespace *_currentNameSpace;
@@ -115,228 +313,6 @@ namespace architect
 			bool _inRecord;
 			bool _inTemplateParameter;
 		};
-
-		VisitorContext::VisitorContext(Registry *registry, clang::Parameters &_parameters)
-			: _registry(registry)
-			, parameters(_parameters)
-			, _currentNameSpace(&registry->rootNameSpace)
-			, _currentSymbol(nullptr)
-			, _referenceType(ReferenceType::ASSOCIATION)
-			, _inRecord(false)
-			, _inTemplateParameter(false)
-		{}
-
-		VisitorContext VisitorContext::setReferenceType(ReferenceType referenceType) const
-		{
-			VisitorContext subContext(*this);
-			subContext._referenceType = referenceType;
-			return subContext;
-		}
-
-		VisitorContext VisitorContext::setInMethod(const CXCursor &recordCursor) const
-		{
-			SymbolIdentifier identifier;
-			Symbol *symbol = getSymbol(recordCursor, identifier);
-
-			VisitorContext subContext(*this);
-			subContext._currentSymbol = symbol;
-			subContext._referenceType = ReferenceType::ASSOCIATION;
-			subContext._inRecord = true;
-			return subContext;
-		}
-
-		VisitorContext VisitorContext::declareNameSpace(const CXCursor &cursor)
-		{
-			auto subNameSpace = _registry->createNamespace();
-			subNameSpace->parent = _currentNameSpace;
-			subNameSpace->name = clang_getCString(clang_getCursorSpelling(cursor));
-
-			_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNameSpace->name, subNameSpace));
-
-			if (subNameSpace->name.empty())
-				subNameSpace->name = "?";
-
-			VisitorContext subContext(*this);
-			subContext._currentNameSpace = subNameSpace;
-			return subContext;
-		}
-
-		VisitorContext VisitorContext::declareGlobal(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
-		{
-			VisitorContext subContext(*this);
-			subContext._referenceType = ReferenceType::ASSOCIATION;
-
-			if (!_inRecord)
-			{
-				Symbol *symbol = declareSymbol(isTemplate ? SymbolType::GLOBAL_TEMPLATE : SymbolType::GLOBAL, cursor, cursor, wasDefined);
-				subContext._currentSymbol = symbol;
-			}
-
-			return subContext;
-		}
-
-		VisitorContext VisitorContext::declareRecord(const CXCursor &cursor, bool isTemplate, bool &wasDefined)
-		{
-			Symbol *symbol = declareSymbol(isTemplate ? SymbolType::RECORD_TEMPLATE : SymbolType::RECORD, cursor, cursor, wasDefined);
-
-			VisitorContext subContext(*this);
-			subContext._currentSymbol = symbol;
-			subContext._referenceType = ReferenceType::COMPOSITION;
-			subContext._inRecord = true;
-			return subContext;
-		}
-		
-		VisitorContext VisitorContext::declareTemplateParameter(const CXCursor &cursor)
-		{
-			if (_inTemplateParameter)
-				return *this;
-
-			auto name = clang_getCString(clang_getCursorSpelling(cursor));
-			_currentSymbol->templateParameters.push_back(name);
-
-			VisitorContext subContext(*this);
-			subContext._referenceType = ReferenceType::ASSOCIATION;
-			subContext._inTemplateParameter = true;
-			return subContext;
-		}
-
-		VisitorContext VisitorContext::declareTypedef(const CXCursor &cursor)
-		{
-			bool wasDefined;
-			Symbol *symbol = declareSymbol(SymbolType::TYPEDEF, cursor, cursor, wasDefined);
-
-			VisitorContext subContext(*this);
-			subContext._currentSymbol = symbol;
-			return subContext;
-		}
-
-		void VisitorContext::declareReference(const CXCursor &cursor, const CXCursor &referenceCursor)
-		{
-			SymbolIdentifier identifier;
-			Symbol *symbol = getSymbol(cursor, identifier);
-
-			if (symbol && _currentSymbol && symbol != _currentSymbol)
-			{
-				Reference reference;
-				reference.location.getFromCursor(referenceCursor);
-				reference.type = _referenceType;
-
-				auto &referenceSet = _currentSymbol->references[symbol->id];
-				referenceSet.insert(reference);
-			}
-		}
-
-		Symbol *findSymbol(SymbolIdentifier &identifier, std::list<std::string> &namespaces, const Namespace *ns)
-		{
-			const Namespace *finalNameSpace = ns;
-			auto itName = namespaces.begin();
-			while (itName != namespaces.end())
-			{
-				auto itChild = finalNameSpace->children.find(*itName);
-				if (itChild == finalNameSpace->children.end())
-					break;
-				finalNameSpace = itChild->second;
-				++itName;
-			}
-
-			if (itName == namespaces.end())
-			{
-				auto it = finalNameSpace->symbols.find(identifier);
-				if (it != finalNameSpace->symbols.end())
-				{
-					return it->second;
-				}
-			}
-
-			for (auto &child : ns->children)
-			{
-				if (child.first.empty())
-				{
-					Symbol *symbol = findSymbol(identifier, namespaces, child.second);
-					if (symbol)
-						return symbol;
-				}
-			}
-
-			return nullptr;
-		}
-
-		Symbol *VisitorContext::getSymbol(const CXCursor &cursor, SymbolIdentifier &identifier) const
-		{
-			CXType type = clang_getCursorType(cursor);
-
-			identifier.name = clang_getCString(clang_getCursorSpelling(cursor));
-			identifier.type = clang_getCString(clang_getTypeSpelling(type));
-
-			switch (type.kind)
-			{
-			case CXType_Enum:
-			case CXType_FunctionProto:
-			case CXType_Invalid:
-			case CXType_Record:
-			case CXType_Typedef:
-			{
-				std::list<std::string> namespaces;
-				clang_visitChildren(cursor, nameSpaceVisitor, &namespaces);
-
-				Namespace *ns = _currentNameSpace;
-				do
-				{
-					Symbol *symbol = findSymbol(identifier, namespaces, ns);
-					if (symbol)
-						return symbol;
-
-					ns = ns->parent;
-				} while (ns);
-
-				break;
-			}
-			}
-
-			return nullptr;
-		}
-
-		Symbol *VisitorContext::declareSymbol(SymbolType symbolType, const CXCursor &cursor, const CXCursor &referenceCursor, bool &wasDefined)
-		{
-			SymbolIdentifier identifier;
-			Symbol *symbol = getSymbol(cursor, identifier);
-			if (!symbol)
-			{
-				symbol = _registry->createSymbol(symbolType, false);
-				symbol->identifier = identifier;
-				symbol->ns = _currentNameSpace;
-
-				_currentNameSpace->symbols.insert(std::pair<SymbolIdentifier, Symbol *>(identifier, symbol));
-			}
-
-			wasDefined = symbol->defined;
-			if (clang_isCursorDefinition(cursor))
-				symbol->defined = true;
-
-			if (_currentSymbol && symbol != _currentSymbol)
-			{
-				Reference reference;
-				reference.location.getFromCursor(referenceCursor);
-				reference.type = _referenceType;
-
-				auto &referenceSet = _currentSymbol->references[symbol->id];
-				referenceSet.insert(reference);
-			}
-
-			return symbol;
-		}
-
-		CXChildVisitResult VisitorContext::nameSpaceVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData)
-		{
-			CXCursorKind kind = clang_getCursorKind(cursor);
-			if (kind == CXCursor_NamespaceRef)
-			{
-				std::string name = clang_getCString(clang_getCursorSpelling(cursor));
-				std::list<std::string> &_namespaces = *static_cast<std::list<std::string> *>(clientData);
-				_namespaces.push_back(name);
-			}
-			return CXChildVisit_Continue;
-		}
 
 		CXChildVisitResult functionVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
 		CXChildVisitResult globalVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData);
