@@ -17,13 +17,13 @@ namespace architect
 
 		struct SccContext : ComputeCyclesParameters
 		{
-			const std::map<SymbolId, Symbol *> &symbols;
+			const Symbols &symbols;
 			std::map<SymbolId, SccData> meta;
 			std::stack<const Symbol *> stack;
-			std::set<std::list<const Symbol *>> cluters;
+			Cycles cluters;
 			uint32_t index;
 
-			SccContext(const ComputeCyclesParameters &parameters, const std::map<SymbolId, Symbol *> &_symbols)
+			SccContext(const ComputeCyclesParameters &parameters, const Symbols &_symbols)
 				: ComputeCyclesParameters(parameters)
 				, symbols(_symbols)
 				, index(0)
@@ -131,7 +131,7 @@ namespace architect
 		return symbol;
 	}
 
-	const std::map<SymbolId, Symbol *> &Registry::getSymbols() const
+	const Symbols &Registry::getSymbols() const
 	{
 		return _symbols;
 	}
@@ -186,9 +186,9 @@ namespace architect
 		}
 	}
 
-	std::set<std::list<const Symbol *>> Registry::computeCycles(const ComputeCyclesParameters &parameters) const
+	Cycles Registry::computeCycles(const ComputeCyclesParameters &parameters) const
 	{
-		std::set<std::list<const Symbol *>> cycles;
+		Cycles cycles;
 		std::set<const Symbol *> visitedSymbols;
 
 		for (auto &pair : _symbols)
@@ -244,7 +244,7 @@ namespace architect
 		return cycles;
 	}
 
-	std::set<std::list<const Symbol *>> Registry::computeScc(const ComputeCyclesParameters &parameters) const
+	Cycles Registry::computeScc(const ComputeCyclesParameters &parameters) const
 	{
 		// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 

@@ -307,7 +307,7 @@ namespace architect
 			return parse(registry, j);
 		}
 
-		void dumpCycles(const std::set<std::list<const Symbol *>> &cycles, nlohmann::json &j, const FormattingParameters &parameters)
+		void dumpCycles(const Cycles &cycles, nlohmann::json &j, const FormattingParameters &parameters)
 		{
 			_json::array_t jCycles(cycles.size());
 			size_t cycleIndex = 0;
@@ -329,14 +329,14 @@ namespace architect
 			j = jCycles;
 		}
 
-		void dumpCycles(const std::set<std::list<const Symbol *>> &cycles, std::ostream &stream, const FormattingParameters &parameters)
+		void dumpCycles(const Cycles &cycles, std::ostream &stream, const FormattingParameters &parameters)
 		{
 			_json j;
 			dumpCycles(cycles, j, parameters);
 			stream << j.dump(parameters.pretty ? 2 : -1) << "\n";
 		}
 
-		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, nlohmann::json &j, const FormattingParameters &parameters)
+		void dumpSymbols(const Symbols &symbols, nlohmann::json &j, const FormattingParameters &parameters)
 		{
 			_json::array_t jSymbols(symbols.size());
 
@@ -378,7 +378,7 @@ namespace architect
 			j = jSymbols;
 		}
 
-		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, std::ostream &stream, const FormattingParameters &parameters)
+		void dumpSymbols(const Symbols &symbols, std::ostream &stream, const FormattingParameters &parameters)
 		{
 			_json j;
 			dumpSymbols(symbols, j, parameters);

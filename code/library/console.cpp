@@ -46,7 +46,7 @@ namespace architect
 
 	namespace console
 	{
-		void dumpCycles(const std::set<std::list<const Symbol *>> &cycles, std::ostream &stream)
+		void dumpCycles(const Cycles &cycles, std::ostream &stream)
 		{
 			for (auto &cycle : cycles)
 			{
@@ -60,7 +60,7 @@ namespace architect
 			}
 		}
 
-		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, std::ostream &stream)
+		void dumpSymbols(const Symbols &symbols, std::ostream &stream)
 		{
 			for (auto &pair : symbols)
 			{

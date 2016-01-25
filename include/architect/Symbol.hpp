@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <map>
 #include <set>
 #include <string>
@@ -55,4 +56,7 @@ namespace architect
 
 		std::string getFullName() const;
 	};
+
+	typedef std::map<SymbolId, Symbol *> Symbols;
+	typedef std::set<std::list<const Symbol *>> Cycles;
 }

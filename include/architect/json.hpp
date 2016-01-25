@@ -2,10 +2,7 @@
 #ifdef ARCHITECT_JSON_SUPPORT
 
 #include <istream>
-#include <list>
-#include <map>
 #include <ostream>
-#include <set>
 #include <json.hpp>
 #include <architect/Symbol.hpp>
 
@@ -25,11 +22,11 @@ namespace architect
 		bool parse(Registry &registry, const nlohmann::json &j);
 		bool parse(Registry &registry, std::istream &stream);
 
-		void dumpCycles(const std::set<std::list<const Symbol *>> &cycles, nlohmann::json &j, const FormattingParameters &parameters = FormattingParameters());
-		void dumpCycles(const std::set<std::list<const Symbol *>> &cycles, std::ostream &stream, const FormattingParameters &parameters = FormattingParameters());
+		void dumpCycles(const Cycles &cycles, nlohmann::json &j, const FormattingParameters &parameters = FormattingParameters());
+		void dumpCycles(const Cycles &cycles, std::ostream &stream, const FormattingParameters &parameters = FormattingParameters());
 
-		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, nlohmann::json &j, const FormattingParameters &parameters = FormattingParameters());
-		void dumpSymbols(const std::map<SymbolId, Symbol *> &symbols, std::ostream &stream, const FormattingParameters &parameters = FormattingParameters());
+		void dumpSymbols(const Symbols &symbols, nlohmann::json &j, const FormattingParameters &parameters = FormattingParameters());
+		void dumpSymbols(const Symbols &symbols, std::ostream &stream, const FormattingParameters &parameters = FormattingParameters());
 	}
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <list>
-#include <map>
 #include <set>
 #include <json.hpp>
 #include <architect/Symbol.hpp>
@@ -30,17 +28,17 @@ namespace architect
 		Namespace *createNamespace();
 		Symbol *createSymbol(SymbolType type, bool defined);
 
-		const std::map<SymbolId, Symbol *> &getSymbols() const;
+		const Symbols &getSymbols() const;
 
 		void removeRedundantDependencies();
-		std::set<std::list<const Symbol *>> computeCycles(const ComputeCyclesParameters &parameters = ComputeCyclesParameters()) const;
-		std::set<std::list<const Symbol *>> computeScc(const ComputeCyclesParameters &parameters = ComputeCyclesParameters()) const;
+		Cycles computeCycles(const ComputeCyclesParameters &parameters = ComputeCyclesParameters()) const;
+		Cycles computeScc(const ComputeCyclesParameters &parameters = ComputeCyclesParameters()) const;
 
 		bool operator==(const Registry &other) const;
 
 	private:
 		std::set<Namespace *> _namespaces;
-		std::map<SymbolId, Symbol *> _symbols;
+		Symbols _symbols;
 
 		SymbolId _nextSymbolId;
 	};
