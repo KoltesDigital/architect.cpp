@@ -122,9 +122,6 @@ namespace architect
 
 				_currentNameSpace->children.insert(std::pair<std::string, Namespace *>(subNamespace->name, subNamespace));
 
-				if (subNamespace->name.empty())
-					subNamespace->name = "?";
-
 				VisitorContext subContext(*this);
 				subContext._currentNameSpace = subNamespace;
 				return subContext;

@@ -58,7 +58,7 @@
     "namespaces": [
       "App",
       "Core",
-      "?"
+      ""
     ],
     "references": [
       {

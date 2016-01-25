@@ -4,7 +4,8 @@ namespace architect
 {
 	namespace
 	{
-		std::string doubleColon("::");
+		const std::string anonymous("?");
+		const std::string doubleColon("::");
 	}
 
 	bool SymbolIdentifier::operator<(const SymbolIdentifier &other) const
@@ -19,14 +20,12 @@ namespace architect
 
 	std::string Symbol::getFullName() const
 	{
-		std::string name = identifier.name;
-		if (name.empty())
-			name = "?";
+		std::string name = (identifier.name.empty() ? anonymous : identifier.name);
 
 		Namespace *iterNs = ns;
 		while (iterNs->parent)
 		{
-			name = iterNs->name + doubleColon + name;
+			name = (iterNs->name.empty() ? anonymous : iterNs->name) + doubleColon + name;
 			iterNs = iterNs->parent;
 		}
 
