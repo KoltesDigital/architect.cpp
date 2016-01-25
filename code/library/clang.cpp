@@ -12,6 +12,8 @@ namespace architect
 #ifdef ARCHITECT_CLANG_PRINT_CURSORS
 		CXChildVisitResult printCursorsVisitor(CXCursor cursor, CXCursor parent, CXClientData clientData)
 		{
+			std::ostream &stream = std::cerr;
+
 			std::string &prefix = *static_cast<std::string *>(clientData);
 			std::string subPrefix = prefix + "    ";
 
@@ -28,7 +30,7 @@ namespace architect
 			std::string cursorUSR(clang_getCString(clang_getCursorUSR(cursor)));
 			int cursorNumTemplateArguments = clang_Cursor_getNumTemplateArguments(cursor);
 
-			std::cout
+			stream
 				<< prefix << cursorKindName << "\n"
 				<< prefix << "    type spelling: " << typeName << "\n"
 				<< prefix << "    type kind spelling: " << typeKindName << "\n"
@@ -41,27 +43,27 @@ namespace architect
 
 			if (typeNumTemplateArguments > 0)
 			{
-				std::cout << prefix << "  Type template types:" << std::endl;
+				stream << prefix << "  Type template types:" << std::endl;
 				for (int i = 0; i < typeNumTemplateArguments; ++i)
 				{
 					CXType argType = clang_Type_getTemplateArgumentAsType(type, i);
 					std::string argTypeName(clang_getCString(clang_getTypeSpelling(argType)));
 					std::string argTypeKindName(clang_getCString(clang_getTypeKindSpelling(argType.kind)));
-					std::cout << subPrefix << argTypeName << " (" << argTypeKindName << ")" << std::endl;
+					stream << subPrefix << argTypeName << " (" << argTypeKindName << ")" << std::endl;
 				}
 			}
 
 			if (clang_isReference(cursorKind))
 			{
-				std::cout << prefix << "  Reference";
+				stream << prefix << "  Reference";
 				CXCursor refCursor = clang_getCursorReferenced(cursor);
 				if (!clang_Cursor_isNull(refCursor))
 				{
 					std::string refName(clang_getCString(clang_getCursorSpelling(refCursor)));
 					std::string refUSR(clang_getCString(clang_getCursorUSR(refCursor)));
-					std::cout << ": " << refName << " (" << refUSR << ")" << std::endl;
+					stream << ": " << refName << " (" << refUSR << ")" << std::endl;
 				}
-				std::cout << std::endl;
+				stream << std::endl;
 			}
 
 			CXCursor parentCursor = clang_getCursorSemanticParent(cursor);
@@ -69,7 +71,7 @@ namespace architect
 			{
 				std::string parentName(clang_getCString(clang_getCursorSpelling(parentCursor)));
 				std::string parentUSR(clang_getCString(clang_getCursorUSR(parentCursor)));
-				std::cout << prefix << "  Parent: " << parentName << " (" << parentUSR << ")" << std::endl;
+				stream << prefix << "  Parent: " << parentName << " (" << parentUSR << ")" << std::endl;
 			}
 
 			clang_visitChildren(cursor, printCursorsVisitor, &subPrefix);
