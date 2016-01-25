@@ -19,22 +19,9 @@ namespace architect
 
 	std::string Symbol::getFullName() const
 	{
-		std::string name;
-		switch (type)
-		{
-		case SymbolType::GLOBAL:
-		case SymbolType::GLOBAL_TEMPLATE:
-		{
-			name = identifier.type + " " + identifier.name;
-			break;
-		}
-
-		default:
-			name = identifier.name;
-			if (name.empty())
-				name = "?";
-			break;
-		}
+		std::string name = identifier.name;
+		if (name.empty())
+			name = "?";
 
 		Namespace *iterNs = ns;
 		while (iterNs->parent)
@@ -57,6 +44,10 @@ namespace architect
 			}
 			name += ">";
 		}
+
+		if (type == SymbolType::GLOBAL ||
+			type == SymbolType::GLOBAL_TEMPLATE)
+			name = identifier.type + " " + name;
 
 		return name;
 	}
