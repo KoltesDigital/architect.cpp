@@ -4,6 +4,7 @@
 #include <clang-c/Index.h>
 #include <architect/Registry.hpp>
 #include <architect/Symbol.hpp>
+#include <architect/util.hpp>
 
 namespace architect
 {
@@ -388,17 +389,16 @@ namespace architect
 		{
 			VisitorContext &context = *static_cast<VisitorContext *>(clientData);
 
-			if (context.parameters.workingDirectory)
+			if (context.parameters.filter)
 			{
 				CXString cfilename;
 				unsigned int line, column;
 				CXSourceLocation sourceLocation = clang_getCursorLocation(cursor);
 				clang_getPresumedLocation(sourceLocation, &cfilename, &line, &column);
-				const char *filename = clang_getCString(cfilename);
-				if (filename[0] == '.' && filename[1] == '.'
-					|| filename[0] == '/'
-					|| filename[0] == '\\'
-					|| strchr(filename, ':') != nullptr)
+				std::string filename = clang_getCString(cfilename);
+				if (!util::absolutePath(filename))
+					return CXChildVisit_Continue;
+				if (!context.parameters.filter(filename))
 					return CXChildVisit_Continue;
 			}
 
@@ -474,6 +474,28 @@ namespace architect
 
 	namespace clang
 	{
+		Parameters::Parameters()
+			: filter(nullptr)
+		{}
+
+		DirectoryFilter::DirectoryFilter()
+		{
+			util::currentWorkingDirectory(_path);
+		}
+
+		DirectoryFilter::DirectoryFilter(const std::string &path)
+			: _path(path)
+		{
+			util::currentWorkingDirectory(_path);
+		}
+
+		bool DirectoryFilter::operator()(const std::string &filename) const
+		{
+			if (filename.size() < _path.size())
+				return false;
+			return filename.substr(0, _path.size()).compare(_path) == 0;
+		}
+
 		void parse(Registry &registry, const CXTranslationUnit translationUnit, Parameters &parameters)
 		{
 			CXCursor rootCursor = clang_getTranslationUnitCursor(translationUnit);

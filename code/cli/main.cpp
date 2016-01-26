@@ -41,7 +41,8 @@ bool loadRegistry(architect::Registry &registry, int argc, const char **argv)
 	case Format::CLANG:
 	{
 		architect::clang::Parameters parameters;
-		parameters.workingDirectory = workingDirectory;
+		if (workingDirectory)
+			parameters.filter = architect::clang::DirectoryFilter();
 
 		if (!architect::clang::parse(registry, argc, argv, parameters))
 		{
