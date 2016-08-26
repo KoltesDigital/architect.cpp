@@ -32,22 +32,32 @@ if formats.dot then defines { "ARCHITECT_DOT_SUPPORT" } end
 if formats.json then defines { "ARCHITECT_JSON_SUPPORT" } end
 
 filter "configurations:Debug"
-	defines { "DEBUG" }
-	flags { "Symbols" }
+	defines {
+		"DEBUG"
+	}
+	flags {
+		"Symbols"
+	}
 	targetsuffix "-d"
 
 filter "configurations:Release"
-	defines { "NDEBUG" }
+	defines {
+		"NDEBUG"
+	}
 	optimize "On"
 
-filter { "platforms:x32" }
+filter "platforms:x32"
 	architecture "x32"
-	libdirs { "dep/lib" }
+	libdirs {
+		"dep/lib"
+	}
 	targetdir "bin"
 
-filter { "platforms:x64" }
+filter "platforms:x64"
 	architecture "x64"
-	libdirs { "dep/lib64" }
+	libdirs {
+		"dep/lib64"
+	}
 	targetdir "bin64"
 
 workspace "architect"
@@ -73,7 +83,6 @@ project "library"
 
 	filter { "platforms:x64" }
 		targetdir "lib64"
-
 
 project "cli"
 	files {
