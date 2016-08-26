@@ -1,9 +1,9 @@
 /*
- * cli.cpp v1.0.0
- * <https://github.com/Bloutiouf/cli.cpp>
- * Copyright (c) 2016 Jonathan Giroux "Bloutiouf"
+ * cli.cpp v1.0.1
+ * <https://github.com/KoltesDigital/cli.cpp>
+ * Copyright (c) 2016 Jonathan Giroux and contributors
  * MIT License <https://opensource.org/licenses/MIT>
-*/
+ */
 
 #pragma once
 
@@ -24,7 +24,7 @@
 
 namespace cli
 {
-	template<class T, template <typename T> class Alloc>
+	template<class T, template <typename A> class Alloc>
 	using list_t = std::list<T, Alloc<T>>;
 
 	template <template <typename T> class Alloc = std::allocator>
@@ -351,7 +351,7 @@ namespace cli
 			return help(defaultHelpFlag());
 		}
 
-		flag_t defaultHelpFlag()
+		flag_t &defaultHelpFlag()
 		{
 			return flag("help")
 				.alias("h")
@@ -489,7 +489,7 @@ namespace cli
 
 		void showHelp(std::ostream &stream)
 		{
-			auto &helpMessage = _helpMessage.str();
+			auto helpMessage = _helpMessage.str();
 			if (!helpMessage.empty())
 			{
 				stream << helpMessage << "\n\n";
@@ -674,7 +674,7 @@ namespace cli
 
 		int callCommand(callback_t callback)
 		{
-			Parser subParser(*this);
+			BasicParser<Alloc> subParser(*this);
 			return callback(subParser);
 		}
 	};
