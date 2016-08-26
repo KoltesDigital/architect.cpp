@@ -66,6 +66,6 @@ Each of these formats can be opted out for building the library by editing `prem
 
 ## License
 
-Copyright (c) 2016 Jonathan Giroux "Bloutiouf"
+Copyright (c) 2016 Jonathan Giroux
 
 [MIT License](https://opensource.org/licenses/MIT)
